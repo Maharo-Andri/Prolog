@@ -31,3 +31,52 @@ Le projet inclut la **modélisation des faits**, des règles de culpabilité, de
 
 ## Structure du projet
 
+ia-enquete-policiere/
+│
+├─ prolog.pl # Faits, règles, cas spéciaux, moteur principal
+├─ README.md # Ce fichier
+
+
+---
+
+## Installation
+
+1. Installer [SWI-Prolog](https://www.swi-prolog.org/download/stable) sur votre machine.
+2. Cloner le projet :
+
+```bash
+git clone https://github.com/<votre-utilisateur>/ia-enquete-policiere.git
+```
+
+3. Se rendre dans le dossier du projet :
+```
+cd ia-enquete-policiere
+```
+
+## Exécution
+
+1. Lancer SWI-Prolog :
+
+```
+swipl
+```
+2. Charger le fichier Prolog :
+
+```
+?- [prolog].
+```
+
+3. Lancer le menu interactif :
+
+```
+?- enquete_policiere:main.
+```
+
+## Exemple de requêtes directes
+
+Pour tester directement la culpabilité ou obtenir les preuves :
+```
+?- enquete_policiere:is_guilty(john, vol).
+?- enquete_policiere:explain_guilt(john, vol, Evidence).
+?- enquete_policiere:find_all_guilty(vol, Suspects).
+```
