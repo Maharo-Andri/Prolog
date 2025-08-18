@@ -1,3 +1,15 @@
+# Les membres du projet
+## M1 GB Groupe 2
+```
+2626 RAMBOLAMANANA Fiderana Esthella
+2630 RAKOTOZANDRY Herisoa Daniella
+2632 ANDRIANTSILAVINA Tsiferana Heritsilavo
+2639 ANDRIATOLOJANAHARY Maharo Mandampitiavana
+2643 RAOELIARIJAONA Hary Miora
+2720 RAFENOMANANDRAY Miralaza
+2737 FENOFITIAVANA Harilalao Patricia
+```
+
 # Prolog
 # Projet IA – Enquête Policière en Prolog
 
