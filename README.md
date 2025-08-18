@@ -45,7 +45,7 @@ ia-enquete-policiere/
 2. Cloner le projet :
 
 ```bash
-git clone https://github.com/<votre-utilisateur>/ia-enquete-policiere.git
+git clone https://github.com/Maharo-Andri/Prolog.git
 ```
 
 3. Se rendre dans le dossier du projet :
