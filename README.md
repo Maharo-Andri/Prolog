@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Les membres du projet
+## M1 GB Groupe 2
+```
+2626 RAMBOLAMANANA Fiderana Esthella
+2630 RAKOTOZANDRY Herisoa Daniella
+2632 ANDRIANTSILAVINA Tsiferana Heritsilavo
+2639 ANDRIATOLOJANAHARY Maharo Mandampitiavana
+2643 RAOELIARIJAONA Hary Miora
+2720 RAFENOMANANDRAY Miralaza
+2737 FENOFITIAVANA Harilalao Patricia
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Prolog
+# Projet IA – Enquête Policière en Prolog
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Description
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ce projet est un **système expert en Prolog** pour la gestion d’enquêtes criminelles.  
+Il permet de déterminer si un suspect est coupable ou innocent en fonction de preuves, témoins, alibis et indices.  
+Le projet inclut la **modélisation des faits**, des règles de culpabilité, des exceptions (alibis, faux positifs, témoins non fiables), et une interface utilisateur interactive.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Fonctionnalités
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Vérifier si un suspect est coupable d’un type de crime (`vol`, `assassinat`, `escroquerie`).
+- Lister tous les suspects coupables d’un type de crime.
+- Gestion des **cas spéciaux** :
+  - Alibis
+  - Faux positifs (empreintes anciennes)
+  - Fiabilité des témoins
+- Explication des preuves à charge pour chaque suspect.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Technologies
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Langage** : Prolog (SWI-Prolog)
+- **Paradigme** : Logique déclarative, système expert
+- **Module principal** : `enquete_policiere`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Installation
+
+1. Installer [SWI-Prolog](https://www.swi-prolog.org/download/stable) sur votre machine.
+2. Cloner le projet :
+
+```bash
+git clone https://github.com/Maharo-Andri/Prolog.git
+```
+
+3. Se rendre dans le dossier du projet :
+```
+cd Prolog
+```
+
+# Application Web Next.js
+
+Une application web moderne permet d'interroger le système expert Prolog via une interface simple et intuitive.
+
+## Utilisation de l'application
+
+1. Installer les dépendances Node.js :
+   ```bash
+   npm install
+   ```
+2. Lancer le serveur de développement :
+   ```bash
+   npm run dev
+   ```
+3. Accéder à l'application dans votre navigateur à l'adresse :
+   ```
+   http://localhost:3000
+   ```
+4. Utiliser les fonctionnalités :
+   - Vérifier la culpabilité d'un suspect
+   - Lister les suspects coupables
+   - Demander une explication des preuves
+
+## Captures d'écran
+
+- Vérification de la culpabilité :
+  ![Vérification culpabilité](captures/verif_culpabilite.png)
+- Liste des suspects coupables :
+  ![Liste coupable](captures/liste_coupable.png)
+- Demande d'explication :
+  ![Demande explication](captures/demmande_d_explication.png)
+
+---
+
+## Exécution directe dans SWI-Prolog
+
+1. Lancer SWI-Prolog :
+   ```
+   swipl
+   ```
+2. Charger le fichier Prolog :
+   ```
+   ?- [prolog].
+   ```
+3. Lancer le menu interactif :
+   ```
+   ?- enquete_policiere:main.
+   ```
+
+## Exemple de requêtes directes
+
+Pour tester directement la culpabilité ou obtenir les preuves :
+```
+?- enquete_policiere:is_guilty(john, vol).
+?- enquete_policiere:explain_guilt(john, vol, Evidence).
+?- enquete_policiere:find_all_guilty(vol, Suspects).
+```

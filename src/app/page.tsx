@@ -1,103 +1,344 @@
-import Image from "next/image";
+"use client";
+import { useState } from 'react';
+import Head from 'next/head';
+import './style.css';
 
-export default function Home() {
+// Fonctions d'analyse des réponses Prolog
+function analyzeGuiltResponse(jsonResponse: any, suspect: string, crimeType: string): string {
+  try {
+    const outerResult = JSON.parse(jsonResponse.result);
+    const isGuilty = outerResult.result === "true" || outerResult.result === true;
+    const success = outerResult.success === "true" || outerResult.success === true;
+
+    if (!success) {
+      return `❌ Erreur lors de la vérification de la culpabilité de ${suspect} pour le crime de ${crimeType}.`;
+    }
+
+    if (isGuilty) {
+      return `✅ ${suspect.charAt(0).toUpperCase() + suspect.slice(1)} est COUPABLE du crime de ${crimeType}.`;
+    } else {
+      return `❌ ${suspect.charAt(0).toUpperCase() + suspect.slice(1)} n'est PAS COUPABLE du crime de ${crimeType}.`;
+    }
+  } catch (error: any) {
+    return `❌ Erreur lors de l'analyse de la réponse : ${error.message}`;
+  }
+}
+
+function analyzeExplanationResponse(jsonResponse: any, suspect: string, crimeType: string): string {
+  try {
+    const outerResult = JSON.parse(jsonResponse.result);
+    const success = outerResult.success === "true" || outerResult.success === true;
+
+    if (!success) {
+      return `❌ Aucune explication trouvée pour ${suspect} concernant le crime de ${crimeType}.`;
+    }
+
+    const evidence = outerResult.result?.evidence || [];
+    
+    if (!evidence || evidence.length === 0) {
+      return `ℹ️ Aucune preuve trouvée contre ${suspect} pour le crime de ${crimeType}.`;
+    }
+
+    const evidenceTranslations: { [key: string]: string } = {
+      'motive': 'mobile établi',
+      'near_scene': 'présence sur la scène de crime',
+      'fingerprint_wpn': 'empreintes digitales sur l\'arme',
+      'bank_txn': 'transaction bancaire suspecte',
+      'fake_identity': 'utilisation de fausse identité',
+      'eyewitness': 'témoignage oculaire fiable',
+      'no_innocence': 'absence d\'alibi valide',
+      'no_false_positive': 'absence de faux positif'
+    };
+
+    const translatedEvidence = evidence.map((e: string) => evidenceTranslations[e] || e);
+    const suspectCapitalized = suspect.charAt(0).toUpperCase() + suspect.slice(1);
+    
+    return `🔍 Preuves contre ${suspectCapitalized} pour le crime de ${crimeType} :\n• ${translatedEvidence.join('\n• ')}`;
+    
+  } catch (error: any) {
+    return `❌ Erreur lors de l'analyse de l'explication : ${error.message}`;
+  }
+}
+
+function analyzeAllGuiltyResponse(jsonResponse: any, crimeType: string): string {
+  try {
+    const outerResult = JSON.parse(jsonResponse.result);
+    const success = outerResult.success === "true" || outerResult.success === true;
+
+    if (!success) {
+      return `❌ Erreur lors de la recherche des coupables pour le crime de ${crimeType}.`;
+    }
+
+    const suspects = outerResult.result?.suspects || [];
+    
+    if (!suspects || suspects.length === 0) {
+      return `ℹ️ Aucun suspect n'est jugé coupable du crime de ${crimeType}.`;
+    }
+
+    const capitalizedSuspects = suspects.map((s: string) => s.charAt(0).toUpperCase() + s.slice(1));
+    
+    if (suspects.length === 1) {
+      return `👤 Un seul suspect est coupable du crime de ${crimeType} : ${capitalizedSuspects[0]}.`;
+    } else {
+      const lastSuspect = capitalizedSuspects.pop();
+      return `👥 ${suspects.length} suspects sont coupables du crime de ${crimeType} : ${capitalizedSuspects.join(', ')} et ${lastSuspect}.`;
+    }
+    
+  } catch (error: any) {
+    return `❌ Erreur lors de l'analyse de la liste des coupables : ${error.message}`;
+  }
+}
+
+export default function EnquetePoliciere() {
+  const [activeTab, setActiveTab] = useState('culpabilite');
+  const [suspect, setSuspect] = useState('john');
+  const [crimeType, setCrimeType] = useState('vol');
+  const [result, setResult] = useState<any>(null);
+  const [formattedResult, setFormattedResult] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+
+  const checkCulpabilite = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/prolog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `is_guilty(${suspect}, ${crimeType})`
+        }),
+      });
+      const data = await response.json();
+      setResult(data);
+      
+      // Analyser et formater la réponse
+      const formatted = analyzeGuiltResponse(data, suspect, crimeType);
+      setFormattedResult(formatted);
+    } catch (error: any) {
+      const errorMsg = "❌ Erreur de connexion avec le serveur Prolog";
+      setResult({ error: errorMsg });
+      setFormattedResult(errorMsg);
+    }
+    setLoading(false);
+  };
+
+  const explainCulpabilite = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/prolog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `explain_guilt(${suspect}, ${crimeType}, Evidence)`
+        }),
+      });
+      const data = await response.json();
+      setResult(data);
+      
+      // Analyser et formater la réponse
+      const formatted = analyzeExplanationResponse(data, suspect, crimeType);
+      setFormattedResult(formatted);
+    } catch (error: any) {
+      const errorMsg = "❌ Erreur de connexion avec le serveur Prolog";
+      setResult({ error: errorMsg });
+      setFormattedResult(errorMsg);
+    }
+    setLoading(false);
+  };
+
+  const findAllGuilty = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/prolog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `find_all_guilty(${crimeType}, Suspects)`
+        }),
+      });
+      const data = await response.json();
+      setResult(data);
+      
+      // Analyser et formater la réponse
+      const formatted = analyzeAllGuiltyResponse(data, crimeType);
+      setFormattedResult(formatted);
+    } catch (error: any) {
+      const errorMsg = "❌ Erreur de connexion avec le serveur Prolog";
+      setResult({ error: errorMsg });
+      setFormattedResult(errorMsg);
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="container">
+      <Head>
+        <title>Enquête Policière - Système Expert</title>
+        <meta name="description" content="Interface d'enquête policière avec Prolog" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <header className="header">
+        <h1>🔍 Système Expert: Enquête Policière</h1>
+        <p>Interface d'interrogation de la base de connaissances Prolog</p>
+      </header>
+
+      <nav className="tabs">
+        <button 
+          className={activeTab === 'culpabilite' ? 'active' : ''} 
+          onClick={() => setActiveTab('culpabilite')}
+        >
+          Vérifier la culpabilité
+        </button>
+        <button 
+          className={activeTab === 'explication' ? 'active' : ''} 
+          onClick={() => setActiveTab('explication')}
+        >
+          Obtenir une explication
+        </button>
+        <button 
+          className={activeTab === 'liste' ? 'active' : ''} 
+          onClick={() => setActiveTab('liste')}
+        >
+          Lister tous les coupables
+        </button>
+      </nav>
+
+      <main className="main">
+        {activeTab === 'culpabilite' && (
+          <div className="tab-content">
+            <h2>Vérifier la culpabilité d'un suspect</h2>
+            <div className="form-group">
+              <label htmlFor="suspect">Suspect:</label>
+              <select 
+                id="suspect" 
+                value={suspect} 
+                onChange={(e) => setSuspect(e.target.value)}
+              >
+                <option value="john">John</option>
+                <option value="mary">Mary</option>
+                <option value="alice">Alice</option>
+                <option value="bruno">Bruno</option>
+                <option value="sophie">Sophie</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="crimeType">Type de crime:</label>
+              <select 
+                id="crimeType" 
+                value={crimeType} 
+                onChange={(e) => setCrimeType(e.target.value)}
+              >
+                <option value="vol">Vol</option>
+                <option value="assassinat">Assassinat</option>
+                <option value="escroquerie">Escroquerie</option>
+              </select>
+            </div>
+            <button style={{color: "white"}} onClick={checkCulpabilite} disabled={loading}>
+              {loading ? 'Requête en cours...' : 'Vérifier la culpabilité'}
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'explication' && (
+          <div className="tab-content">
+            <h2>Obtenir une explication détaillée</h2>
+            <div className="form-group">
+              <label htmlFor="suspect2">Suspect:</label>
+              <select 
+                id="suspect2" 
+                value={suspect} 
+                onChange={(e) => setSuspect(e.target.value)}
+              >
+                <option value="john">John</option>
+                <option value="mary">Mary</option>
+                <option value="alice">Alice</option>
+                <option value="bruno">Bruno</option>
+                <option value="sophie">Sophie</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="crimeType2">Type de crime:</label>
+              <select 
+                id="crimeType2" 
+                value={crimeType} 
+                onChange={(e) => setCrimeType(e.target.value)}
+              >
+                <option value="vol">Vol</option>
+                <option value="assassinat">Assassinat</option>
+                <option value="escroquerie">Escroquerie</option>
+              </select>
+            </div>
+            <button onClick={explainCulpabilite} disabled={loading}>
+              {loading ? 'Requête en cours...' : 'Obtenir une explication'}
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'liste' && (
+          <div className="tab-content">
+            <h2>Lister tous les coupables pour un type de crime</h2>
+            <div className="form-group">
+              <label htmlFor="crimeType3">Type de crime:</label>
+              <select 
+                id="crimeType3" 
+                value={crimeType} 
+                onChange={(e) => setCrimeType(e.target.value)}
+              >
+                <option value="vol">Vol</option>
+                <option value="assassinat">Assassinat</option>
+                <option value="escroquerie">Escroquerie</option>
+              </select>
+            </div>
+            <button onClick={findAllGuilty} disabled={loading}>
+              {loading ? 'Requête en cours...' : 'Lister les coupables'}
+            </button>
+          </div>
+        )}
+
+        <div className="results">
+          <h2>Résultats</h2>
+          {loading ? (
+            <p>Chargement...</p>
+          ) : formattedResult ? (
+            <div className="formatted-result">
+              <div style={{ 
+                backgroundColor: '#f8f9fa', 
+                border: '1px solid #e9ecef', 
+                borderRadius: '8px', 
+                padding: '15px', 
+                marginBottom: '15px',
+                whiteSpace: 'pre-line',
+                fontSize: '16px',
+                lineHeight: '1.5'
+              }}>
+                {formattedResult}
+              </div>
+              <details style={{ marginTop: '10px' }}>
+                <summary style={{ cursor: 'pointer', color: '#666' }}>
+                  Voir la réponse JSON brute
+                </summary>
+                <pre style={{ 
+                  backgroundColor: '#f1f3f4', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  fontSize: '12px',
+                  overflow: 'auto'
+                }}>
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </details>
+            </div>
+          ) : (
+            <p>Exécutez une requête pour voir les résultats</p>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }

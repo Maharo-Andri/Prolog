@@ -20,6 +20,18 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      // Désactive l'erreur pour les variables non utilisées
+      "@typescript-eslint/no-unused-vars": "off",
+      
+      // Désactive l'erreur pour le type 'any'
+      "@typescript-eslint/no-explicit-any": "off",
+      
+      // Désactive l'erreur pour les entités non échappées (apostrophes)
+      "react/no-unescaped-entities": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
