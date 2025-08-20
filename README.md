@@ -41,6 +41,15 @@ Le projet inclut la **modélisation des faits**, des règles de culpabilité, de
 
 ---
 
+## Prérequis environnement
+
+- Node.js >= 18.x
+- npm >= 9.x
+- SWI-Prolog installé sur la machine (https://www.swi-prolog.org/download/stable)
+- OS compatible : Windows, Linux, MacOS
+
+---
+
 ## Installation
 
 1. Installer [SWI-Prolog](https://www.swi-prolog.org/download/stable) sur votre machine.
@@ -112,3 +121,5 @@ Pour tester directement la culpabilité ou obtenir les preuves :
 ?- enquete_policiere:explain_guilt(john, vol, Evidence).
 ?- enquete_policiere:find_all_guilty(vol, Suspects).
 ```
+
+---
